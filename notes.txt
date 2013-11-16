@@ -1,0 +1,9 @@
+stoplist --> internet filter
+nltk buch --> 2tes kapitel --> stoplist
+naive bayes
+
+weitere features
+- sentence length
+- schimpfwörter
+- wieviele hashtags
+- tfidf
