@@ -26,7 +26,7 @@ class csvPreprocess(object):
     
         lines = [line for line in file(f)]
         
-        for line in lines[1:10]:    
+        for line in lines[1:]:    
             # Process the line and create separate items from csv formatting
             line = line.strip('"')
             line = line.split('","')
