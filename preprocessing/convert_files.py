@@ -9,7 +9,7 @@ import cPickle as cp
 
 if __name__ == '__main__':
     csv = r'..\data\train.csv'
-    pickle = open(r'..\data\new_train_2', 'w')
+    pickle = open(r'..\data\new_train', 'r+')
 
 def convert_data(source, target):
     train_data = pp()
@@ -22,8 +22,6 @@ def convert_data(source, target):
 def load_data(source):
     data = cp.load(source)
     return data
-
-convert_data(csv, pickle)
     
 # def count_words():
 # 	words = {}
