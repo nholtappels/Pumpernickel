@@ -7,17 +7,18 @@ Created on 14.11.2013
 from csvPreprocess import csvPreprocess as pp
 import cPickle as cp
 
-if __name__ == '__main__':
+def covert_files():
     csv = r'..\data\train.csv'
     pickle = open(r'..\data\new_train', 'r+')
-
-def convert_data(source, target):
     train_data = pp()
-    train_data.preprocess(source)
+    train_data.preprocess(csv)
     print "pre-processing done"
     dump_data = [train_data.feature_dict, train_data.target_dict, train_data.ids]
-    cp.dump(dump_data, target)
+    dump_data(dump_data, pickle)
     print "data converted"
+
+def dump_data(data, target):
+    cp.dump(data, target)
 
 def load_data(source):
     data = cp.load(source)
