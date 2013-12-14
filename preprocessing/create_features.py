@@ -15,4 +15,4 @@ ids = data[2]
 
 
 
-print features[1][0]
+print features[1]
