@@ -16,7 +16,12 @@ Created on 14.12.2013
 from convert_files import *
 import nltk
 
-pickle = open(r'..\data\new_train_test', 'r+')
+
+global lower_threshold_word_frequency
+lower_threshold_word_frequency = 1	#if words occur less than threshold, don't include in all_words
+
+
+pickle = open(r'..\data\new_train_2', 'r+')
 
 data = load_data(pickle)
 features = data[0]
@@ -27,19 +32,75 @@ stopwords = nltk.corpus.stopwords.words('english')
 stopwords.remove('down')
 stopwords.remove('very')
 
-all_features = []
-words = []
+features_all_tweets = []
+
+
+#build list of all words:
+total_frequency = {}
+all_words = []	#all used words
+for tweet_id,features_old in features.items():
+	tweet_words = features_old[0]
+	for w in tweet_words:
+		if not w in all_words:
+			all_words.append(w)
+			total_frequency[w] = 1
+		else:
+			total_frequency[w] += 1
+		if '#' in w:
+			print w
+			#e.g. for '#cold' also add 'cold' (and later increase frequency)
+	#(hashtags have value in itself (more important) but should also increase frequency of word without #
+	#because used as normal words (e.g. 'it's #freezing in #NYC today')
+			w = w.strip('#')
+			print w
+			if not w in all_words:
+				all_words.append(w)
+				total_frequency[w] = 1
+			else:
+				total_frequency[w] += 1
+
+#throw out words occuring less that 'lower_threshold_word_frequencies':
+for w in all_words:
+	if total_frequency[w] < lower_threshold_word_frequency:
+		all_words.remove(w)
+	
+print all_words
+
 #for each tweet preprocess the features (stoplist, stemming etc.):
-for key,value in features.items():
-	features = []
-	features.append(key)
+for tweet_id,features_old in features.items():
+	features_new = []
+	#ID:
+	features_new.append(tweet_id)
+
+	tweet_words = features_old[0]
+	hashtags = features_old[1]
+	has_hashtags = features_old[2]
+	has_mention = features_old[3]
+	is_retweeted = features_old[4]
+	state = features_old[5]
+			
+	#WORDS:
+	word_vector = [0]*len(all_words)
+	for w in tweet_words:
+		word_vector[all_words.index(w)] += 1
+
+	#HASHTAGS:
+	#e.g. for '#cold' also increase frequency of 'cold'
+	for h in hashtags:
+		word_vector[all_words.index(h.strip('#'))] += 1
+	
+	features_new.append(word_vector)
 
 
 
+	#OTHER FEATURES:
+	features_new.append(has_hashtags)
+	features_new.append(has_mention)
+	features_new.append(is_retweeted)
+	features_new.append(state)
+
+	print features_new
+	print " "
 
 
-<<<<<<< HEAD
 #print features[1][0]
-=======
-print features[1]
->>>>>>> 033d559f23687dedef48dd33442254d17887a8b2
