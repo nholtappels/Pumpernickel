@@ -6,18 +6,20 @@ Created on 08.12.2013
 
 from nltk import corpus
 import cPickle as cp
+import csv
 
 class csvPreprocess(object):
     ''' Class for preprocessing csv file for later use
     '''
     
-    def __init__(self, is_train = True):
+    def __init__(self, lower_threshold_word_frequency = 1, is_train = True):
         self.feature_dict = {}
         self.target_dict = {}
         self.ids = []
         self.is_train = is_train
         self.delchars = ''.join(c for c in map(chr, range(256)) if not c.isalpha())
         self.stopwords = corpus.stopwords.words('english')
+        self.lower_threshold_word_frequency = lower_threshold_word_frequency
     
     def import_csv(self, csv, storage):
         ''' Imports the csv containing our training data and creates three
@@ -116,3 +118,10 @@ class csvPreprocess(object):
         self.ids = data[2]
         source.close()
         print "Data loaded"
+    
+    def __write_csv_row(self, f,row):
+        for a in row[:-1]:
+            f.write(str(a) + ',')
+        f.write(str(row[-1]) + '\n')
+    
+    
