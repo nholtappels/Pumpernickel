@@ -36,7 +36,7 @@ class csvPreprocess(object):
         lines = [line for line in source]
         print "CSV imported"
         
-        for line in lines[1:]:    
+        for line in lines[1:10]:    
             # Process the line and create separate items from csv formatting
             line = line.strip('"\n')
             line = line.split('","')
@@ -104,6 +104,7 @@ class csvPreprocess(object):
     def __save_data(self, target):
         data = [self.feature_dict, self.target_dict, self.ids]
         cp.dump(data, target)
+        target.close()
         print "Data saved"
 
     def load_data(self, source):
@@ -111,4 +112,5 @@ class csvPreprocess(object):
         self.feature_dict = data[0]
         self.target_dict = data[1]
         self.ids = data[2]
+        source.close()
         print "Data loaded"
