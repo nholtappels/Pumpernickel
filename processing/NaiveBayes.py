@@ -9,14 +9,33 @@ def main():
 	nb = NaiveBayes()
 	
 	#TWITTER:
-	data,all_targets = load_features_targets('../data/features.csv', '../data/targets.csv')
+	features,all_targets,IDs = load_features_targets('../data/features.csv',
+			'../data/targets.csv')
+	#test,test_indeces = load_testdata('../test.csv')
+	
+	features, targets, IDs, testfeatures, testtargets, testIDs = splitdata(features, 
+			all_targets, IDs)
+
+
+	prediction_file = open('../predictions.csv', 'w')
+
+	write_csv_row(prediction_file, ['id','s1','s2','s3','s4','s5','w1','w2','w3','w4',\
+			'k1','k2','k3','k4','k5','k6','k7','k8','k9','k10','k11','k12',\
+			'k13','k14','k15'])
+
 
 	#run Naive Bayes for each target separately
 	#(not 1 vs all because different targets are independent)
 	num_targets = all_targets.shape[1]
-	for targ in xrange(num_targets):
-		targets = all_targets[targ]
+	for targ_index in xrange(num_targets):
+		targets = all_targets[targ_index]
 
+		#Naive Bayes:
+		nb.train(features, targets)
+		predictions = nb.predict(testfeatures)
+		#errors = evaluate(predictions, testtargets)
+		#print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
+    print predictions
 
 
 	#nb.train(data, targets)
@@ -27,18 +46,22 @@ def main():
 
 	return 
 
+def write_csv_row(f,row):
+	for a in row[:-1]:
+		f.write(str(a) + ',')
+	f.write(str(row[-1]) + '\n')
 
 def load_features_targets(feature_file, target_file):
 	#determine number of columns in order to skip the first column
 	features = np.loadtxt(feature_file, delimiter=',', skiprows=1)
 	features = features[:,1:]	#first column is ID
-	print features
 	
 	targets = np.loadtxt(target_file, delimiter=',', skiprows=1)
 	targets = targets[:,1:]		#first column is ID
-	print targets
 
-	return features, targets
+	IDs = features[:0]
+
+	return features, targets, IDs
 
 
 def evaluate(predictions, correct):
@@ -48,6 +71,17 @@ def evaluate(predictions, correct):
 			errors += 1
 	return errors
 
+#split in training set & test set:
+def splitdata(data, targets, IDs):
+	cut = .7 * len(data)
+	testdata = data[cut:]
+	testtargets = targets[cut:]
+	testIDs = IDs[cut:]
+	data = data[:cut]
+	targets = targets[:cut]
+	IDs = IDs[:cut]
+	
+	return data, targets, IDs, testdata, testtargets, testIDs
 
 	
 class NaiveBayes(object):
@@ -63,7 +97,6 @@ class NaiveBayes(object):
 		'''
 
 		# make a list of unique target-values: (they need to be in a certain order in order because argmax just retrieves an index, that's why no set)
-		targets = [t[0] for t in targets]	#extract values from lists in numpy array
 		self.targets = list(set(targets))
 
 		#calculate all frequencies of target-values:
@@ -86,7 +119,7 @@ class NaiveBayes(object):
 					if(targets[row] == v): attr_values.append(data[row][col])
 				col_attr_values.append(attr_values)
 			all_attr_values[v] = col_attr_values
-
+		
 		self.means = {}
 		for v,attr in all_attr_values.items():
 			self.means[v] = [np.mean(a) for a in attr]
