@@ -13,7 +13,7 @@ def main():
             '../data/targets.csv')
     # test,test_indeces = load_testdata('../test.csv')
 
-    features, targets, IDs, testfeatures, testtargets, testIDs = splitdata(features,
+    features, all_targets, IDs, testfeatures, all_testtargets, testIDs = splitdata(features,
             all_targets, IDs)
 
 
@@ -23,17 +23,28 @@ def main():
                                     'w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
                                     'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k15'])
 
-
+    
     # run Naive Bayes for each target separately
     # (not 1 vs all because different targets are independent)
+    
+
+
+    # print 'test on:'
+    # print testfeatures
+
+
+    all_targets = all_targets.T
     for targets in all_targets:
-        print targets
+
+    #targets = all_targets[3]
+    #print 'targets: ' + str(targets)
+
         # Naive Bayes:
         nb.train(features, targets)
         predictions = nb.predict(testfeatures)
-        # errors = evaluate(predictions, testtargets)
-        # print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
-    print predictions
+        #errors = evaluate(predictions, testtargets)
+        #print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
+        print '--> predictions: ' + str(predictions) + '\n'
 
 
     # nb.train(data, targets)
@@ -95,7 +106,9 @@ class NaiveBayes(object):
         '''
 
         # make a list of unique target-values: (they need to be in a certain order in order because argmax just retrieves an index, that's why no set)
+
         self.targets = list(set(targets))
+        print 'all_targets: ' + str(self.targets)
 
         # calculate all frequencies of target-values:
         self.targetprob = {}
@@ -118,7 +131,8 @@ class NaiveBayes(object):
                 col_attr_values.append(attr_values)
             all_attr_values[v] = col_attr_values
 
-        self.means = {}
+        #print 'all_attr_values: ' + str(all_attr_values)
+        #self.means = {}
         for v, attr in all_attr_values.items():
             self.means[v] = [np.mean(a) for a in attr]
 
