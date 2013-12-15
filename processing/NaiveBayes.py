@@ -9,14 +9,15 @@ def main():
 	nb = NaiveBayes()
 	
 	#TWITTER:
-	data,targets = load_features_targets('../data/features.csv', '../data/targets.csv')
+	data,all_targets = load_features_targets('../data/features.csv', '../data/targets.csv')
+
+	#run Naive Bayes for each target separately
+	#(not 1 vs all because different targets are independent)
+	num_targets = all_targets.shape[1]
+	for targ in xrange(num_targets):
+		targets = all_targets[targ]
 
 
-
-	#HOUSING DATA:
-	#data,targets = loadHousingData('RealEstate.csv')
-
-	#data, targets, testdata, testtargets = splitdata(data, targets)
 
 	#nb.train(data, targets)
 	#predictions = nb.predict(testdata)
@@ -27,60 +28,25 @@ def main():
 	return 
 
 
+def load_features_targets(feature_file, target_file):
+	#determine number of columns in order to skip the first column
+	features = np.loadtxt(feature_file, delimiter=',', skiprows=1)
+	features = features[:,1:]	#first column is ID
+	print features
+	
+	targets = np.loadtxt(target_file, delimiter=',', skiprows=1)
+	targets = targets[:,1:]		#first column is ID
+	print targets
+
+	return features, targets
+
+
 def evaluate(predictions, correct):
 	errors = 0
 	for i in range(0,len(predictions)):
 		if(predictions[i] != correct[i]):
 			errors += 1
 	return errors
-
-#split in training set & test set:
-def splitdata(data, targets):
-	cut = .7 * len(data)
-	testdata = data[cut:]
-	testtargets = targets[cut:]
-	data = data[:cut]
-	targets = targets[:cut]
-	
-	return data, targets, testdata, testtargets
-
-#this loads the housing data, extracts data and targets etc.
-def loadHousingData(filename):
-	dataset = np.loadtxt(filename, delimiter=',', skiprows=1, usecols=(2,3,4,5))
-	np.random.shuffle(dataset)
-
-	#extract target:
-	num_targets = dataset[:,0]
-	num_targets = num_targets.reshape((dataset.shape[0],1))
-
-	#binarize the target values:
-	targets = list()
-	for y in num_targets:
-		if y <= 295000: targets.append(1)
-		else: targets.append(0)
-	targets = np.array(targets)
-	targets = targets.reshape((targets.shape[0], 1))
-
-
-	# extract data:
-	data = np.array(dataset[:,1:])
-
-	return data, targets
-
-def load_features_targets(feature_file, target_file):
-	#determine number of columns in order to skip the first column
-	with open(feature_file) as f:
-		columns = int(f.readline())
-		f.close()
-	use_columns = range(1,columns)
-	print use_columns
-	dataset = np.loadtxt(feature_file, delimiter=',', skiprows=2, usecols=(use_columns))
-
-	print dataset[:5]
-	
-	targets = []
-
-	return dataset, targets
 
 
 	
