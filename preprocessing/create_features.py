@@ -28,7 +28,7 @@ def write_csv_row(f,row):
 	f.write(str(row[-1]) + '\n')
 
 
-pickle = open(r'..\data\training_data', 'r+')
+pickle = open(r'..\data\training_data_small', 'r+')
 
 data = load_data(pickle)
 features = data[0]
@@ -175,8 +175,6 @@ columns.append('is_retweeted')
 for s in states:
 	columns.append(s)
 
-
-feat_file.write(str(len(columns)) + '\n')
 write_csv_row(feat_file, columns)
 
 for row in features_all_tweets:
