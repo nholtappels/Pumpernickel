@@ -6,20 +6,22 @@ Created on 08.12.2013
 
 from nltk import corpus
 import cPickle as cp
+import csv
 
 class csvPreprocess(object):
     ''' Class for preprocessing csv file for later use
     '''
-
-    def __init__(self, is_train = True):
+    
+    def __init__(self, lower_threshold_word_frequency = 1, is_train = True):
         self.feature_dict = {}
         self.target_dict = {}
         self.ids = []
         self.is_train = is_train
         self.delchars = ''.join(c for c in map(chr, range(256)) if not c.isalpha())
         self.stopwords = corpus.stopwords.words('english')
+        self.lower_threshold_word_frequency = lower_threshold_word_frequency
     
-    def import_csv(self, source, target):
+    def import_csv(self, csv, storage):
         ''' Imports the csv containing our training data and creates three
         items from it:
         
@@ -33,10 +35,11 @@ class csvPreprocess(object):
         ids = [id1, id2, etc.]
         '''
         
+        source = open(r'..\data\\' + csv , 'r')
         lines = [line for line in source]
         print "CSV imported"
         
-        for line in lines[1:10]:    
+        for line in lines[1:]:    
             # Process the line and create separate items from csv formatting
             line = line.strip('"\n')
             line = line.split('","')
@@ -52,9 +55,8 @@ class csvPreprocess(object):
                 self.target_dict[key] = targets
             self.ids.append(key)
         print "Data imported from CSV"   
-        self.__save_data(target)
-        
-        
+        self.__save_data(storage)
+    
     def __create_features(self, tweet, state):
         ''' Creates one row of the feature_dict based on the content of
         the csv. Is called from within import_csv.
@@ -91,7 +93,7 @@ class csvPreprocess(object):
                 words.remove('rt')
         features = [words, hashtags, has_hashtag, has_mention, is_retweet, has_link, state]
         return features
-        
+    
     def __create_targets(self, kinds):
         ''' Creates one row of the target_dict based on the content of
         the csv. Is called from within import_csv.
@@ -101,16 +103,25 @@ class csvPreprocess(object):
             targets.append(t)
         return targets
     
-    def __save_data(self, target):
+    def __save_data(self, storage):
+        target = open(r'..\data\\' + storage , 'w')
         data = [self.feature_dict, self.target_dict, self.ids]
         cp.dump(data, target)
         target.close()
         print "Data saved"
-
-    def load_data(self, source):
+    
+    def load_data(self, storage):
+        source = open(r'..\data\\' + storage , 'r')
         data = cp.load(source)
         self.feature_dict = data[0]
         self.target_dict = data[1]
         self.ids = data[2]
         source.close()
         print "Data loaded"
+    
+    def __write_csv_row(self, f,row):
+        for a in row[:-1]:
+            f.write(str(a) + ',')
+        f.write(str(row[-1]) + '\n')
+    
+    
