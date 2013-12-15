@@ -7,7 +7,7 @@ Created on 15.12.2013
 from csvPreprocess import csvPreprocess as pp
 
 prep = pp()
- 
+
 csv = 'train.csv'
 storage = 'training_data_2'
 

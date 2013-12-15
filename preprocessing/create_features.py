@@ -156,4 +156,3 @@ for row in features_all_tweets:
 targ_file = open('../data/targets.csv', 'w')
 writer = csv.writer(targ_file)
 writer.writerows(targets_all_tweets)
-
