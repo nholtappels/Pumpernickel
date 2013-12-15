@@ -1,9 +1,3 @@
-def write_csv_row(f, row):
-    for a in row[:-1]:
-        f.write(str(a) + ',')
-    f.write(str(row[-1]) + '\n')
-
-
 pickle = open(r'..\data\training_data_small', 'r+')
 
 data = load_data(pickle)
