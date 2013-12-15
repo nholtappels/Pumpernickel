@@ -28,7 +28,7 @@ def write_csv_row(f,row):
 	f.write(str(row[-1]) + '\n')
 
 
-pickle = open(r'..\data\new_train_2', 'r+')
+pickle = open(r'..\data\training_data', 'r+')
 
 data = load_data(pickle)
 features = data[0]
@@ -164,7 +164,7 @@ for t_id,t in targets.items():
 
 #WRITE TO FILES:
 feat_file = open('../data/features.csv', 'w')
-#writer = csv.writer(feat_file)
+
 
 columns = ['ID']
 for w in all_words:
@@ -176,13 +176,11 @@ for s in states:
 	columns.append(s)
 
 
-#writer.writerow(columns)
+feat_file.write(str(len(columns)) + '\n')
 write_csv_row(feat_file, columns)
-print len(columns)
+
 for row in features_all_tweets:
-	print len(row)
 	write_csv_row(feat_file, row)
-#writer.writerows(features_all_tweets)
 
 targ_file = open('../data/targets.csv', 'w')
 writer = csv.writer(targ_file)
