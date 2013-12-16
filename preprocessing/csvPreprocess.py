@@ -82,6 +82,7 @@ class csvPreprocess(object):
             tweet = line[1]
             state = line[2]
             kinds = line[13:]
+            print kinds
             # Create features, targets and IDs and add them to the class params
             features = self.__create_features(tweet, state)
             targets = self.__create_targets(kinds)
