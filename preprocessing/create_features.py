@@ -1,22 +1,11 @@
 pickle = open(r'..\data\training_data_small', 'r+')
 
 data = load_data(pickle)
-features = data[0]
-targets = data[1]
-ids = data[2]
-
-# FEATURES: [[15,0,0,0,0,1,0,1,1,3,1,0,0,2,1,0,1,1,0,0,0,0,0,1],[...],...]; order: [id (not a feature), freq1, freq2, freq3, ..., has_hashtag, has_mention, is_retweet, oklahoma, new york, california...]
-features_all_tweets = []
-# TARGETS: [[0,1,0,0.194,0,0.605,0.2,0],...] probabilities for each kind of weather, not summing to 1. first value is ID, followed by target-values
-targets_all_tweets = []
-
-
-
 
 # build list of all words:
-total_frequency = {}
+
 all_words = []  # all used words
-for tweet_id, features_old in features.items():
+for tweet_id, features_old in self.feature_dict.items():
     tweet_words = features_old[0]
     for w in tweet_words:
         if not w in all_words:
@@ -25,9 +14,7 @@ for tweet_id, features_old in features.items():
         else:
             total_frequency[w] += 1
 
-    # e.g. for '#cold' also add 'cold' (and later increase frequency)
-    # (hashtags have value in itself (more important) but should also increase frequency of word without #
-    # because used as normal words (e.g. 'it's #freezing in #NYC today')
+
     for h in hashtags:
         if not w in all_words:
             all_words.append(w)
@@ -63,7 +50,7 @@ states = new
 
 
 # for each tweet preprocess the features (stoplist, stemming etc.):
-for tweet_id, features_old in features.items():
+for tweet_id, features_old in self.feature_dict.items():
     features_new = []
     # ID:
     features_new.append(tweet_id)
@@ -113,16 +100,16 @@ for tweet_id, features_old in features.items():
 
 
     # append features of this tweet to list of all features
-    features_all_tweets.append(features_new)
+    self.feature_dict.append(features_new)
 
 
 
 
 
 # TARGETS:
-for t_id, t in targets.items():
+for t_id, t in self.target_dict.items():
     # append this to targets: [ID, t1, t2, ...]
-    targets_all_tweets.append([t_id] + t)
+    self.target_dict.append([t_id] + t)
 
 
 
@@ -144,9 +131,9 @@ for s in states:
 
 write_csv_row(feat_file, columns)
 
-for row in features_all_tweets:
+for row in self.feature_dict:
     write_csv_row(feat_file, row)
 
 targ_file = open('../data/targets.csv', 'w')
 writer = csv.writer(targ_file)
-writer.writerows(targets_all_tweets)
+writer.writerows(self.target_dict)
