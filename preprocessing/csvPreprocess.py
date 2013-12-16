@@ -11,16 +11,20 @@ class csvPreprocess(object):
     ''' Class for preprocessing csv file for later use
     '''
 
-    def __init__(self, frequency_threshold = 1, is_train = True):
+    def __init__(self, frequency_threshold = 1, numlines = 0, is_train = True):
         self.feature_dict = {}
         self.target_dict = {}
         self.all_words = []
         self.total_word_count = 0
+        # The minimum number of occurrences of a word to be kept in all_words
+        self.frequency_threshold = frequency_threshold
+        # If is_train == False, no target_dict will be created
         self.is_train = is_train
+        # Number of lines of the initial CSV that will be imported
+        self.numlines = numlines
         self.delchars = (''.join(c for c in map(chr, range(256)) if not
                                  c.isalpha()))
         self.stopwords = corpus.stopwords.words('english')
-        self.frequency_threshold = frequency_threshold
         # FEATURES: [[15,0,0,0,0,1,0,1,1,3,1,0,0,2,1,0,1,1,0,0,0,0,0,1],
         # [...],...]; order: [id (not a feature), freq1, freq2, freq3,
         # ..., has_hashtag, has_mention, is_retweet, oklahoma, new york,
@@ -56,7 +60,7 @@ class csvPreprocess(object):
         feature_dict = {id1: features=[words=['w1', 'w2', etc.],
                         hashtags=['ht1', 'ht2', etc.],
                         has_hashtag=True/False, has_mention=True/False,
-                        is_retweet=True/False, state='state'], id2: etc.}
+                        is_retweet=True/False, has_link=True/False state='state'], id2: etc.}
 
         target_dict = {id1: targets=[0, 0.2, 0.1, etc.], id2: etc.}
         '''
@@ -65,7 +69,12 @@ class csvPreprocess(object):
         lines = [line for line in source]
         print "CSV imported"
 
-        for line in lines[1:100]:
+        if self.numlines != 0:
+            check_lines = lines[1:self.numlines]
+        else:
+            check_lines = lines[1:]
+
+        for line in check_lines:
             # Process the line and create separate items from csv formatting
             line = line.strip('"\n')
             line = line.split('","')
@@ -73,6 +82,7 @@ class csvPreprocess(object):
             tweet = line[1]
             state = line[2]
             kinds = line[13:]
+            print kinds
             # Create features, targets and IDs and add them to the class params
             features = self.__create_features(tweet, state)
             targets = self.__create_targets(kinds)
@@ -179,13 +189,15 @@ class csvPreprocess(object):
         to self.word_count and create list of all words
         '''
         for key, value in self.total_frequency.items():
-            if value <= self.frequency_threshold:
+            if value < self.frequency_threshold:
                 del self.total_frequency[key]
         self.total_word_count = len(self.total_frequency)
         for word in self.total_frequency.iterkeys():
             self.all_words.append(word)
 
-        print "Infrequent words removed"
+        print ("Infrequent words removed at a threshold of " +
+               str(self.frequency_threshold) + ", " +
+               str(self.total_word_count) + " words kept")
 
     def __create_feature_list(self):
         for tweet_id, features_old in self.feature_dict.iteritems():
@@ -199,7 +211,8 @@ class csvPreprocess(object):
             has_hashtags = features_old[2]
             has_mention = features_old[3]
             is_retweet = features_old[4]
-            state = features_old[5]
+            has_link = features_old[5]
+            state = features_old[6]
 
             # WORDS:
             word_vector = [0] * self.total_word_count
@@ -221,6 +234,7 @@ class csvPreprocess(object):
             features_new.append(has_hashtags)
             features_new.append(has_mention)
             features_new.append(is_retweet)
+            features_new.append(has_link)
 
             # STATES:
             # give naive bayes a list where 1 means it's that state:
@@ -246,27 +260,33 @@ class csvPreprocess(object):
         print "Target list created"
 
     def __save_csvs(self, features_csv, targets_csv):
-        columns = ['ID']
+
+        feature_headers = ['ID']
         for w in self.all_words:
-            columns.append(w)
-        columns.append('has_hashtag')
-        columns.append('has_mention')
-        columns.append('is_retweet')
+            feature_headers.append(w)
+        feature_headers.append('has_hashtag')
+        feature_headers.append('has_mention')
+        feature_headers.append('is_retweet')
+        feature_headers.append('has_link')
         for s in self.states:
-            columns.append(s)
+            feature_headers.append(s)
 
         # Save features.csv
         features = open(r'..\data\\' + features_csv , 'w')
-        self.__write_csv_row(features, columns)
+        self.__write_csv_row(features, feature_headers)
         for row in self.feature_list:
             self.__write_csv_row(features, row)
         features.close()
+        print "Features CSV created"
+
+        target_headers = ['ID', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6',
+                          'k7', 'k8', 'k9', 'k10', 'k11', 'k12', 'k13',
+                          'k14', 'k15']
 
         # Save targets.csv
         targets = open(r'..\data\\' + targets_csv , 'w')
-        self.__write_csv_row(targets, columns)
-        for row in self.feature_list:
+        self.__write_csv_row(targets, target_headers)
+        for row in self.target_list:
             self.__write_csv_row(targets, row)
         targets.close()
-
-        print "New CSVs created"
+        print "Targets CSV created"
