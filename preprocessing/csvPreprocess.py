@@ -6,7 +6,6 @@ Created on 08.12.2013
 
 from nltk import corpus
 import cPickle as cp
-import csv
 
 class csvPreprocess(object):
     ''' Class for preprocessing csv file for later use
@@ -247,8 +246,6 @@ class csvPreprocess(object):
         print "Target list created"
 
     def __save_csvs(self, features_csv, targets_csv):
-        features = open(r'..\data\\' + features_csv , 'w')
-
         columns = ['ID']
         for w in self.all_words:
             columns.append(w)
@@ -258,15 +255,18 @@ class csvPreprocess(object):
         for s in self.states:
             columns.append(s)
 
+        # Save features.csv
+        features = open(r'..\data\\' + features_csv , 'w')
         self.__write_csv_row(features, columns)
-
         for row in self.feature_list:
             self.__write_csv_row(features, row)
         features.close()
 
+        # Save targets.csv
         targets = open(r'..\data\\' + targets_csv , 'w')
-        writer = csv.writer(targets)
-        writer.writerows(self.target_list)
+        self.__write_csv_row(targets, columns)
+        for row in self.feature_list:
+            self.__write_csv_row(targets, row)
         targets.close()
 
         print "New CSVs created"
