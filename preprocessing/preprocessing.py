@@ -10,22 +10,21 @@ from csvPreprocess import csvPreprocess as pp
 # implement upper threshold
 # association measure
 
-frequency_threshold = 15
+lower_threshold = 5
+upper_threshold = 100
 numlines = 10000
 
-prep = pp(frequency_threshold, numlines)
-
+# create dynamic filenames based on the values above
 csv = 'train.csv'
-storage = 'training_data_' + str(frequency_threshold) + '_' + str(numlines)
-features_csv = 'features_' + str(frequency_threshold) + '_' + str(numlines) + '.csv'
-targets_csv = 'targets_' + str(frequency_threshold) + '_' + str(numlines) + '.csv'
+storage = ('training_data_' + str(lower_threshold) + '_' +
+           str(upper_threshold) + '_' + str(numlines))
+features_csv = ('features_' + str(lower_threshold) + '_' +
+                str(upper_threshold) + '_' + str(numlines) + '.csv')
+targets_csv = ('targets_' + str(lower_threshold) + '_' +
+               str(upper_threshold) + '_' + str(numlines) + '.csv')
 
-prep = pp(5, 100, 5000)
-
-csv = 'train.csv'
-storage = 'training_data_5000_3'
-features_csv = 'features_5000_4.csv'
-targets_csv = 'targets_5000_4.csv'
+# instanciate a model
+prep = pp(lower_threshold, upper_threshold, numlines)
 
 prep.import_csv(csv, storage)
 prep.create_new_csvs(features_csv, targets_csv, storage)

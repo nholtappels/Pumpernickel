@@ -95,7 +95,7 @@ def evaluate(predictions, correct):
 def splitdata(data, targets, IDs):
     # split in training set & test set:
     cut = .7 * len(data)
-    testdata = data[cut:]
+    testdata = data[cutz]
     testtargets = targets[cut:]
     testIDs = IDs[cut:]
     data = data[:cut]
