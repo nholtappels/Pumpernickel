@@ -6,7 +6,6 @@ Created on 15.12.2013
 
 from csvPreprocess import csvPreprocess as pp
 
-<<<<<<< HEAD
 # look at KAPPA
 # implement upper threshold
 # association measure
@@ -20,14 +19,13 @@ csv = 'train.csv'
 storage = 'training_data_' + str(frequency_threshold) + '_' + str(numlines)
 features_csv = 'features_' + str(frequency_threshold) + '_' + str(numlines) + '.csv'
 targets_csv = 'targets_' + str(frequency_threshold) + '_' + str(numlines) + '.csv'
-=======
-prep = pp(3, 500)
+
+prep = pp(5, 100, 5000)
 
 csv = 'train.csv'
 storage = 'training_data_5000_3'
-features_csv = 'features_5000_3.csv'
-targets_csv = 'targets_5000_3.csv'
->>>>>>> c721cf63de530113df3df9236c2d35b962c73171
+features_csv = 'features_5000_4.csv'
+targets_csv = 'targets_5000_4.csv'
 
 prep.import_csv(csv, storage)
 prep.create_new_csvs(features_csv, targets_csv, storage)

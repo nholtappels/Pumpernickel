@@ -6,18 +6,27 @@ Created on 08.12.2013
 
 from nltk import corpus
 import cPickle as cp
+import matplotlib.pyplot as plt
+import operator
 
 class csvPreprocess(object):
     ''' Class for preprocessing csv file for later use
     '''
 
-    def __init__(self, frequency_threshold = 1, numlines = 0, is_train = True):
+    '''
+    parameters:
+    lower_threshold: words occuring less frequent than this are removed (absolute)
+    upper_threshold: words occuring more frequent than this are removed (threshold is percentage of highest frequency, 100=nothing removed)
+
+    '''
+    def __init__(self, lower_threshold = 1, upper_threshold = 100, numlines = 0, is_train = True):
         self.feature_dict = {}
         self.target_dict = {}
         self.all_words = []
         self.total_word_count = 0
         # The minimum number of occurrences of a word to be kept in all_words
-        self.frequency_threshold = frequency_threshold
+        self.lower_threshold = lower_threshold
+        self.upper_threshold = upper_threshold
         # If is_train == False, no target_dict will be created
         self.is_train = is_train
         # Number of lines of the initial CSV that will be imported
@@ -25,6 +34,7 @@ class csvPreprocess(object):
         self.delchars = (''.join(c for c in map(chr, range(256)) if not
                                  c.isalpha()))
         self.stopwords = corpus.stopwords.words('english')
+        #self.stopwords.append('weather')   #this word occurs in almost 50% of the tweets
         # FEATURES: [[15,0,0,0,0,1,0,1,1,3,1,0,0,2,1,0,1,1,0,0,0,0,0,1],
         # [...],...]; order: [id (not a feature), freq1, freq2, freq3,
         # ..., has_hashtag, has_mention, is_retweet, oklahoma, new york,
@@ -54,7 +64,7 @@ class csvPreprocess(object):
                        'wisconsin', 'wyoming']
 
     def import_csv(self, csv, storage):
-        ''' Imports the csv containing our training data and creates two
+        ''' Imports the csv containing the training data and creates two
         dictionaries from it:
 
         feature_dict = {id1: features=[words=['w1', 'w2', etc.],
@@ -82,7 +92,7 @@ class csvPreprocess(object):
             tweet = line[1]
             state = line[2]
             kinds = line[13:]
-            print kinds
+            #print kinds
             # Create features, targets and IDs and add them to the class params
             features = self.__create_features(tweet, state)
             targets = self.__create_targets(kinds)
@@ -95,15 +105,40 @@ class csvPreprocess(object):
     def create_new_csvs(self, features_csv, targets_csv, storage):
         self.__load_data(storage)
         self.__count_frequencies()
-        self.__remove_infrequent_words()
+        #self.__plot_word_frequencies()
+        self.__remove_lowfrequent_highfrequent_words()
         self.__create_feature_list()
         self.__create_target_list()
         self.__save_csvs(features_csv, targets_csv)
+
+    def __plot_word_frequencies(self):
+        count_freq_dict = {}
+        for word, freq in self.total_frequency.iteritems():
+            count_freq_dict.setdefault(freq, 0)
+            count_freq_dict[freq] += 1
+        freq_list = []
+        count_list = []
+        for freq, count in count_freq_dict.iteritems():
+            #print '%d %d' % (freq, count)
+            freq_list.append(freq)
+            count_list.append(count)
+
+        plot = plt.bar(freq_list, count_list)
+        plt.axvline(x=self.lower_threshold, color='r')
+        plt.axvline(x=self.upper_threshold, color='r')
+        
+
+        plt.xlabel('frequencies')
+        plt.ylabel('count')
+        plt.title('word frequencies')
+
+        plt.show()
 
     def __create_features(self, tweet, state):
         ''' Creates one row of the feature_dict based on the content of
         the csv. Is called from within import_csv.
         '''
+
 
         words = []
         hashtags = []
@@ -114,6 +149,7 @@ class csvPreprocess(object):
         # Process the words
         tweet = tweet.split(' ')
         for word in tweet:
+            word = word.lower()
             if word.startswith('@mention'):
                 has_mention = 1
                 word = ''
@@ -128,13 +164,14 @@ class csvPreprocess(object):
             if word in self.stopwords:
                 word = ''
             if len(word) > 1:
-                words.append(word.lower())
+                words.append(word)
 
         if has_mention:
             if 'rt' in words:
                 is_retweet = 1
                 words.remove('rt')
         features = [words, hashtags, has_hashtag, has_mention, is_retweet, has_link, state]
+
         return features
 
     def __create_targets(self, kinds):
@@ -183,21 +220,26 @@ class csvPreprocess(object):
                                                  setdefault(hashtag, 0) + 1)
         print "Frequencies counted"
 
-    def __remove_infrequent_words(self):
-        ''' Throw out words occuring less than 'frequency_threshold'
+    def __remove_lowfrequent_highfrequent_words(self):
+        ''' Throw out words occuring less often than 'lower_threshold' and
+        more often than 'upper_threshold'
         Also count the total number of words in the dict and save it
         to self.word_count and create list of all words
         '''
-        for key, value in self.total_frequency.items():
-            if value < self.frequency_threshold:
-                del self.total_frequency[key]
-        self.total_word_count = len(self.total_frequency)
+        # make upper_threshold absolute using the percentage of maximum frequency
+        maxfreq = max(self.total_frequency.iteritems(), key=operator.itemgetter(1))[1]
+        upper_threshold = maxfreq * self.upper_threshold / 100
+        num_all_words = len(self.total_frequency)
+        for word, freq in self.total_frequency.items():
+            if freq < self.lower_threshold or freq > upper_threshold:
+                del self.total_frequency[word]
+            #if freq > 200:
+            #    print '%s:\t\t%d' % (word, freq) 
+            self.total_word_count = len(self.total_frequency)
         for word in self.total_frequency.iterkeys():
             self.all_words.append(word)
 
-        print ("Infrequent words removed at a threshold of " +
-               str(self.frequency_threshold) + ", " +
-               str(self.total_word_count) + " words kept")
+        print "words less frequent than %d and more frequent than %d removed, %d/%d words kept" % (self.lower_threshold, upper_threshold, self.total_word_count, num_all_words)
 
     def __create_feature_list(self):
         for tweet_id, features_old in self.feature_dict.iteritems():
