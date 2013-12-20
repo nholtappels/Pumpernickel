@@ -7,23 +7,25 @@ Created on 16.12.2013
 from NaiveBayes import NaiveBayes
 import numpy as np
 
-feature_filename = '../data/features_5000_3.csv'
-target_filename = '../data/targets_5000_3.csv'
+feature_filename = '../data/features_5_100_1000.csv'
+target_filename = '../data/targets_5_100_1000.csv'
 prediction_filename = '../data/predictions2.csv'
 
-def main(feature_file, target_file, prediction_file):
+def main(feature_file, target_file, prediction_filename):
 
     nb = NaiveBayes()
 
     # TWITTER:
+    print 'load features and targets from files...'
     features, all_targets, IDs = load_features_targets(feature_file, target_file)
 
     # test,test_indeces = load_testdata('../test.csv')
+    print 'split data in training set and test set...'
     features, all_targets, IDs, testfeatures, all_testtargets, testIDs = splitdata(features,
             all_targets, IDs)
 
 
-    prediction_file = open(predictions_file, 'w')
+    prediction_file = open(prediction_filename, 'w')
 
     write_csv_row(prediction_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2', 'w3', \
                                     'w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
@@ -35,12 +37,13 @@ def main(feature_file, target_file, prediction_file):
 
     # print 'test on:'
     # print testfeatures
-
     all_predictions = []
     all_targets = all_targets.T
+    i = 0
     for targets in all_targets:
     # targets = all_targets[3]
     # print 'targets: ' + str(targets)
+        print 'target %d: training and predicting' % (i)
         # Naive Bayes:
         nb.train(features, targets)
         predictions = nb.predict(testfeatures)
@@ -48,14 +51,16 @@ def main(feature_file, target_file, prediction_file):
         # print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
 #         print '--> predictions: ' + str(predictions) + '\n'
         all_predictions.append(predictions)
+        i += 1
 
+    print 'write predictions to file...'
     # write predictions to file
     all_predictions = (np.array(all_predictions).T).tolist()
     for i in range(len(all_predictions)):
         pred = all_predictions[i]
-        # ID = testIDs[i]
-        zeros = [ID] + [0] * 9
-        #zeros = [0.0] * 10
+        ID = testIDs[i]
+        zeros = [int(ID)] + [0] * 9
+        # zeros = [0.0] * 10
         write_csv_row(prediction_file, zeros + pred)
 
 
@@ -66,6 +71,7 @@ def main(feature_file, target_file, prediction_file):
     # errors = evaluate(predictions, testtargets)
     # print 'Housing Data: %d/%d predictions wrong.' %(errors, len(predictions))
 
+    print 'finished.'
     return
 
 def write_csv_row(f, row):
@@ -76,12 +82,13 @@ def write_csv_row(f, row):
 def load_features_targets(feature_file, target_file):
     # determine number of columns in order to skip the first column
     features = np.loadtxt(feature_file, delimiter = ',', skiprows = 1)
+    IDs = features[:, 0]
     features = features[:, 1:]  # first column is ID
 
     targets = np.loadtxt(target_file, delimiter = ',', skiprows = 1)
     targets = targets[:, 1:]  # first column is ID
 
-    IDs = features[:0]
+
 
     return features, targets, IDs
 
@@ -95,7 +102,7 @@ def evaluate(predictions, correct):
 def splitdata(data, targets, IDs):
     # split in training set & test set:
     cut = .7 * len(data)
-    testdata = data[cutz]
+    testdata = data[cut:]
     testtargets = targets[cut:]
     testIDs = IDs[cut:]
     data = data[:cut]

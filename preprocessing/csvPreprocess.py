@@ -21,6 +21,7 @@ class csvPreprocess(object):
     '''
     def __init__(self, lower_threshold = 1, upper_threshold = 100, numlines = 0, is_train = True):
         self.feature_dict = {}
+        self.test_dict = {}
         self.target_dict = {}
         self.all_words = []
         self.total_word_count = 0
@@ -106,7 +107,7 @@ class csvPreprocess(object):
     def create_new_csvs(self, features_csv, targets_csv, storage):
         self.__load_data(storage)
         self.__count_frequencies()
-        self.__plot_word_frequencies()
+#         self.__plot_word_frequencies()
         self.__remove_lowfrequent_highfrequent_words()
         self.__create_feature_list()
         self.__create_target_list()
@@ -185,8 +186,12 @@ class csvPreprocess(object):
         return targets
 
     def __save_data(self, storage):
+        if self.is_train:
+            data = [self.feature_dict, self.target_dict]
+        else:
+            data = [self.feature_dict]
         target = open(r'..\data\\' + storage , 'w')
-        data = [self.feature_dict, self.target_dict]
+
         cp.dump(data, target)
         target.close()
         print "Data saved"
@@ -195,7 +200,8 @@ class csvPreprocess(object):
         source = open(r'..\data\\' + storage , 'r')
         data = cp.load(source)
         self.feature_dict = data[0]
-        self.target_dict = data[1]
+        if self.is_train:
+            self.target_dict = data[1]
         source.close()
         print "Data loaded"
 
