@@ -4,25 +4,26 @@ Created on 16.12.2013
 @author: Nick
 '''
 
-from processing.NaiveBayes import NaiveBayes
+from NaiveBayes import NaiveBayes
 import numpy as np
 
-feature_filename = 
-targets_filename = 
+feature_filename = '../data/features_5000_3.csv'
+target_filename = '../data/targets_5000_3.csv'
+prediction_filename = '../data/predictions2.csv'
 
-def main(features, targets):
+def main(feature_file, target_file, prediction_file):
 
     nb = NaiveBayes()
 
     # TWITTER:
-    features, all_targets, IDs = load_features_targets(features, targets)
+    features, all_targets, IDs = load_features_targets(feature_file, target_file)
 
     # test,test_indeces = load_testdata('../test.csv')
     features, all_targets, IDs, testfeatures, all_testtargets, testIDs = splitdata(features,
             all_targets, IDs)
 
 
-    prediction_file = open('../data/predictions.csv', 'w')
+    prediction_file = open(predictions_file, 'w')
 
     write_csv_row(prediction_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2', 'w3', \
                                     'w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
@@ -53,8 +54,8 @@ def main(features, targets):
     for i in range(len(all_predictions)):
         pred = all_predictions[i]
         # ID = testIDs[i]
-        # zeros = [ID] + [0] * 9
-        zeros = [0.0] * 10
+        zeros = [ID] + [0] * 9
+        #zeros = [0.0] * 10
         write_csv_row(prediction_file, zeros + pred)
 
 
@@ -72,10 +73,8 @@ def write_csv_row(f, row):
         f.write(str(a) + ',')
     f.write(str(row[-1]) + '\n')
 
-def load_features_targets(features, targets):
+def load_features_targets(feature_file, target_file):
     # determine number of columns in order to skip the first column
-    feature_file = '../data/' + str(features)
-    target_file = '../data/' + str(targets)
     features = np.loadtxt(feature_file, delimiter = ',', skiprows = 1)
     features = features[:, 1:]  # first column is ID
 
@@ -106,4 +105,4 @@ def splitdata(data, targets, IDs):
     return data, targets, IDs, testdata, testtargets, testIDs
 
 if __name__ == '__main__':
-    main(feature_filename, targets_filename)
+    main(feature_filename, target_filename, prediction_filename)
