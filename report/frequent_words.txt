@@ -1,0 +1,39 @@
+more than 300 times in 5000 tweets:
+
+
+
+
+
+hot:            364
+wind:           223
+sunny:          419 !!!
+degrees:       	274
+humidity:       230
+rain:           282
+cold:           270
+mph:            250
+storm:          487 !!!	
+sunshine:       298
+im:             299
+get:            202
+day:            472	
+like:           279
+snow:           205
+today:          351
+outside:        311
+good:           252
+pm:             273
+rainy:          275
+weather:        2325
+
+< 5:
+editing:        2
+bug:            1
+misty:          1
+wise:           4
+askmeinyears:   2
+wisn:           2
+twitte:         1
+wearyoursnuggietowork: 1
+supreme:        1
+pin:            1
