@@ -7,8 +7,9 @@ Created on 16.12.2013
 from NaiveBayes import NaiveBayes
 import numpy as np
 
-feature_filename = '../data/features_5_100_1000.csv'
-target_filename = '../data/targets_5_100_1000.csv'
+feature_filename_train = '../data/features_train_5_100_1000.csv'
+target_filename_train = '../data/targets_test_5_100_1000.csv'
+feature_filename_test = '../data/features_test_5_100_1000.csv/
 prediction_filename = '../data/predictions2.csv'
 
 def main(feature_file, target_file, prediction_filename):
