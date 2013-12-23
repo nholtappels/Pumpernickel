@@ -105,6 +105,7 @@ def load_features(features_file):
     return np.asarray(features), np.asarray(IDs)
 
 
+
 def load_targets(targets_file):
     targets = np.loadtxt(targets_file, delimiter = ',', skiprows = 1)
     targets = targets[:, 1:]  # first column is ID
