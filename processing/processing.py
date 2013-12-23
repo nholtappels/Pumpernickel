@@ -9,10 +9,10 @@ from create_filenames import create_names
 import numpy as np
 from slice_merge import slice_csv, merge_csvs
 
-lower_threshold = 1
+lower_threshold = 5
 upper_threshold = 100
-numlines_train = 10  # 0 will be interpreted as all lines
-numlines_test = 10000  # 0 will be interpreted as all lines
+numlines_train = 1000  # 0 will be interpreted as all lines
+numlines_test = 1000  # 0 will be interpreted as all lines
 slice_size = 200
 
 features_file_train, targets_file_train, features_file_test, \
@@ -22,7 +22,7 @@ predictions_file_test = create_names(lower_threshold, upper_threshold,
 def main():
 
     try:
-        load_features(features_file_train, 1)
+        load_features(features_file_test, 1)
     except IOError:
         print "The corresponding files have not been created yet."
         print "Please run preprocessing witht the same parameters and try again."
@@ -82,9 +82,7 @@ def main():
         print 'write predictions to file...'
         # write predictions to file
         all_predictions = (np.array(all_predictions).T).tolist()
-        print all_predictions
         for i in range(len(all_predictions)):
-            print i
             pred = all_predictions[i]
             ID = IDs_test[i]
             zeros = [int(ID)] + [0] * 9

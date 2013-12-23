@@ -7,10 +7,10 @@ Created on 15.12.2013
 from csvPreprocess import csvPreprocess as pp
 from create_filenames import create_names
 
-lower_threshold = 1
+lower_threshold = 5
 upper_threshold = 100
-numlines_train = 10
-numlines_test = 10  # 0 will be interpreted as all lines
+numlines_train = 1000
+numlines_test = 1000  # 0 will be interpreted as all lines
 only_trainingset = 0
 
 def preprocess(lower_threshold, numlines_train, numlines_test, only_trainingset):
