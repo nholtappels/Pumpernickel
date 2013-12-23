@@ -15,7 +15,9 @@ class NaiveBayes(object):
         '''data and targets are assumed to be np.arrays
         '''
 
-        # make a list of unique target-values: (they need to be in a certain order in order because argmax just retrieves an index, that's why no set)
+        # make a list of unique target-values: (they need to be in a
+        # certain order in order because argmax just retrieves an index,
+        # that's why no set)
 
         self.targets = list(set(targets))
 #         print 'all_targets: ' + str(self.targets)
@@ -41,8 +43,8 @@ class NaiveBayes(object):
                 col_attr_values.append(attr_values)
             all_attr_values[v] = col_attr_values
 
-        # print 'all_attr_values: ' + str(all_attr_values)
-        # self.means = {}
+#         print 'all_attr_values: ' + str(all_attr_values)
+#         self.means = {}
         for v, attr in all_attr_values.items():
             self.means[v] = [np.mean(a) for a in attr]
 
@@ -60,33 +62,33 @@ class NaiveBayes(object):
 
     def predict(self, data):
         predictions = []
-        i = 0
+#         i = 0
         for datapoint in data:
-            # print 'datapoint: %s' % str(datapoint)
+#             print 'datapoint: %s' % str(datapoint)
             probabilities = []
             for v in self.targets:
-                # print 'target-value: %s' % str(v)
+#                 print 'target-value: %s' % str(v)
                 p_v = self.targetprob[v]
                 attributes = [attr for attr in datapoint]
                 gaussians = stats.norm.pdf(attributes, self.means[v], self.sds[v])
 
-                # /stats.norm.pdf(self.means[v], self.means[v], self.sds[v])
-                # print self.means[v]
-                # print self.sds[v]
-                # print [attr for attr in datapoint]
-                # print 'attr=%s, means=%s, sds=%s --> %s' %(str(attributes), str(self.means[v]), str(self.sds[v]), str(gaussians))
+#                 /stats.norm.pdf(self.means[v], self.means[v], self.sds[v])
+#                 print self.means[v]
+#                 print self.sds[v]
+#                 print [attr for attr in datapoint]
+#                 print 'attr=%s, means=%s, sds=%s --> %s' %(str(attributes), str(self.means[v]), str(self.sds[v]), str(gaussians))
 
                 product_p_a = reduce(operator.mul, gaussians, 1)
-                # print 'p_v * product_p_a = p;    %s * %s = %s' %(str(p_v), str(product_p_a), str(p_v * product_p_a))
+#                 print 'p_v * product_p_a = p;    %s * %s = %s' %(str(p_v), str(product_p_a), str(p_v * product_p_a))
                 probabilities.append(p_v * product_p_a)
 
-            # if(i==0):
-            #    print datapoint
-            #    print probabilities
-            # i += 1
+#             if(i==0):
+#                print datapoint
+#                print probabilities
+#             i += 1
 
             pred = self.targets[np.argmax(probabilities)]
             predictions.append(pred)
-            # print 'prediction: %s \n' %str(pred)
+#             print 'prediction: %s \n' %str(pred)
 
         return predictions

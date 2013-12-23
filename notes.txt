@@ -7,3 +7,8 @@ weitere features
 - schimpfwörter
 - wieviele hashtags
 - tfidf
+
+
+# look at KAPPA
+# implement upper threshold
+# association measure

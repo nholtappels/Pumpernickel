@@ -24,18 +24,18 @@ class csvPreprocess(object):
         self.features_dict_train = {}
         self.features_dict_test = {}
         self.targets_dict_train = {}
-        self.features_list_train = []
-        self.targets_list_train = []
-        self.features_list_test = []
-        # self.stopwords.append('weather')   #this word occurs in almost 50% of the tweets
+
         # FEATURES: [[15,0,0,0,0,1,0,1,1,3,1,0,0,2,1,0,1,1,0,0,0,0,0,1],
         # [...],...]; order: [id (not a feature), freq1, freq2, freq3,
-        # ..., has_hashtag, has_mention, is_retweet, oklahoma, new york,
-        # california...]
+        # ..., has_hashtag, has_mention, is_retweet, has_link, oklahoma,
+        # new york, california...]
+        self.features_list_train = []
+        self.features_list_test = []
 
         # TARGETS: [[0,1,0,0.194,0,0.605,0.2,0],. probabilities for each
         # kind of weather, not summing to 1. first value is ID, followed by
         # target-values
+        self.targets_list_train = []
 
         self.all_words = []
         self.total_word_count = 0
@@ -51,7 +51,7 @@ class csvPreprocess(object):
         self.delchars = (''.join(c for c in map(chr, range(256)) if not
                                  c.isalpha()))
         self.stopwords = corpus.stopwords.words('english')
-        
+
         self.total_frequency = {}
         # for later we need a list of states
         self.states = ['alabama', 'alaska', 'arizona', 'arkansas',
@@ -72,7 +72,7 @@ class csvPreprocess(object):
                        'wisconsin', 'wyoming']
 
     def import_csv(self, csv_train, csv_test, storage_train, storage_test):
-        ''' Imports the csv containing the training data and optionally a csv containing the 
+        ''' Imports the csv containing the training data and optionally a csv containing the
         test data and creates two dictionaries from the training data (and optionally a feature_dict from
         the test data):
 
@@ -83,7 +83,7 @@ class csvPreprocess(object):
 
         target_dict = {id1: targets=[0, 0.2, 0.1, etc.], id2: etc.}
         '''
-        
+
         # TRAINING SET FILE:
         print "importing training set..."
         source = open(csv_train, 'r')
@@ -96,7 +96,7 @@ class csvPreprocess(object):
 
         i = 0
         for line in check_lines:
-            #inform about progress
+            # inform about progress
             if i % 500 == 0:
                 print '%d tweets processed' % i
             i += 1
@@ -114,7 +114,7 @@ class csvPreprocess(object):
             targets_train = self.__create_targets(kinds)
             self.features_dict_train[key] = features_train
             self.targets_dict_train[key] = targets_train
-        print 'all tweets processed'
+        print 'all tweets for training processed'
 
         # TEST SET FILE (if applicable):
         if self.is_train == False:
@@ -126,10 +126,10 @@ class csvPreprocess(object):
                 check_lines = lines[1:self.numlines_test]
             else:
                 check_lines = lines[1:]
-            
+
             i = 0
             for line in check_lines:
-                #inform about progress
+                # inform about progress
                 if i % 500 == 0:
                     print '%d tweets processed' % i
                 i += 1
@@ -140,30 +140,28 @@ class csvPreprocess(object):
                 key = int(line[0])
                 tweet = line[1]
                 state = line[2]
-                kinds = line[13:]
-                # print kinds
-                # Create features, targets and IDs and add them to the class variables
+                # Create features and add them to the class variable
                 features_test = self.__create_features_row(tweet, state)
                 self.features_dict_test[key] = features_test
-        print "all tweets processed"
-        self.__save_data(storage_train,storage_test)
+        print "all tweets for testing processed"
+        self.__save_data(storage_train, storage_test)
         print "Data imported from CSVs"
 
-
-    def create_new_csvs(self, features_train_csv, targets_train_csv, features_test_csv, storage_train, storage_test):
-        self.__load_data(storage_train, storage_test)   #load data from file into features_list and targets_list
+    def create_new_csvs(self, features_train_csv, targets_train_csv,
+                        features_test_csv, storage_train, storage_test):
+        # load data from file into features_list and targets_list
+        self.__load_data(storage_train, storage_test)
         self.total_frequency = self.__count_frequencies(self.features_dict_train)
-        #optional: plotting of word frequencies
-#       self.__plot_word_frequencies()
+        # optional: plotting of word frequencies
+#         self.__plot_word_frequencies()
         self.__remove_lowfrequent_highfrequent_words()
         self.features_list_train = self.__create_features_list(self.features_dict_train)
         self.targets_list_train = self.__create_targets_list(self.targets_dict_train)
 
-        # for test step we do not need to create the bag of words but just count word frequencies 
+        # for test step we do not need to create the bag of words but just count word frequencies
         # according to the bag of words created for the training seet:
         if self.is_train == False:
             self.features_list_test = self.__create_features_list(self.features_dict_test)
-            #(total_frequency.setdefault(word, 0) + 1)
         self.__save_csvs(features_train_csv, targets_train_csv, features_test_csv)
 
     def __plot_word_frequencies(self):
@@ -179,7 +177,7 @@ class csvPreprocess(object):
             count_list.append(count)
 
         plt.bar(freq_list, count_list)
-        #draw the lower and upper threshold:
+        # draw the lower and upper threshold:
         plt.axvline(x = self.lower_threshold, color = 'r')
         plt.axvline(x = self.upper_threshold_absolute, color = 'r')
 
@@ -203,10 +201,11 @@ class csvPreprocess(object):
         tweet = tweet.split(' ')
         for word in tweet:
             word = word.lower()
-            if word.startswith('@mention'):
+            if word.startswith('@'):
                 has_mention = 1
                 word = ''
-            if word.startswith('{link}'):
+            if (word.startswith('{link}') or word.startswith('http://') or
+                word.startswith('https://')):
                 has_link = 1
                 word = ''
             if word.startswith('#'):
@@ -302,7 +301,7 @@ class csvPreprocess(object):
         for word in self.total_frequency.iterkeys():
             self.all_words.append(word)
 
-        print "words less frequent than %d and more frequent than %d removed, %d/%d words kept" \
+        print "words less frequent than %d and more frequent than %d removed, \n %d/%d words kept" \
                 % (self.lower_threshold, self.upper_threshold_absolute, self.total_word_count, num_all_words)
 
     def __create_features_list(self, features_dict):
@@ -371,7 +370,7 @@ class csvPreprocess(object):
 
     def __save_csvs(self, features_train_csv, targets_train_csv, features_test_csv):
         print "saving training features in csv"
-        #first row: label of columns
+        # first row: label of columns
         feature_headers = ['ID']
         for w in self.all_words:
             feature_headers.append(w)
