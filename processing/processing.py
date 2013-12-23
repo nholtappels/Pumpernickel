@@ -43,6 +43,14 @@ def main():
     pred_names = []
     first = 1
 
+    print 'TRAINING'
+    all_targets = all_targets_train.T
+    for i in xrange(15):
+        targets = all_targets[i]
+        print 'target %d: training' % (i)
+        nb[i].train(features_train, targets)
+
+    print 'PREDICTING'
     for slice_name in slice_names:
         print '>>> starting with slice', s
         print 'load test features...'
@@ -65,15 +73,10 @@ def main():
         # (not 1 vs all because different targets are independent)
 
         all_predictions = []
-        all_targets = all_targets_train.T
-        i = 0
-        for targets in all_targets:
-            print 'target %d: training and predicting' % (i)
-            # Naive Bayes:
-            nb.train(features_train, targets)
-            predictions = nb.predict(features_test)
+        for i in xrange(15):
+            print 'target %d: predicting' % (i)
+            predictions = nb[i].predict(features_test)
             all_predictions.append(predictions)
-            i += 1
 
         print 'write predictions to file...'
         # write predictions to file
