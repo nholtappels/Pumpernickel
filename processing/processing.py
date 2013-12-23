@@ -6,13 +6,12 @@ Created on 16.12.2013
 
 from NaiveBayes import NaiveBayes
 from create_filenames import create_names
-from preprocessing import preprocess
 import numpy as np
 
-lower_threshold = 10
+lower_threshold = 1
 upper_threshold = 100
-numlines_train = 10000  # 0 will be interpreted as all lines
-numlines_test = 1000  # 0 will be interpreted as all lines
+numlines_train = 10  # 0 will be interpreted as all lines
+numlines_test = 10  # 0 will be interpreted as all lines
 
 features_file_train, targets_file_train, features_file_test, \
 predictions_file_test = create_names(lower_threshold, upper_threshold,
@@ -23,7 +22,9 @@ def main():
     try:
         load_features(features_file_train)
     except IOError:
-        preprocess(lower_threshold, numlines_train, numlines_test, 0)
+        print "The corresponding files have not been created yet."
+        print "Please run preprocessing witht the same parameters and try again."
+        raise SystemExit(0)
 
     nb = NaiveBayes()
 
@@ -51,20 +52,20 @@ def main():
     # run Naive Bayes for each target separately
     # (not 1 vs all because different targets are independent)
 
-    # print 'test on:'
-    # print testfeatures
+#     print 'test on:'
+#     print testfeatures
     all_predictions = []
     all_targets = all_targets_train.T
     i = 0
     for targets in all_targets:
-    # targets = all_targets[3]
-    # print 'targets: ' + str(targets)
+#         targets = all_targets[3]
+#         print 'targets: ' + str(targets)
         print 'target %d: training and predicting' % (i)
         # Naive Bayes:
         nb.train(features_train, targets)
         predictions = nb.predict(features_test)
-        # errors = evaluate(predictions, testtargets)
-        # print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
+#         errors = evaluate(predictions, testtargets)
+#         print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
 #         print '--> predictions: ' + str(predictions) + '\n'
         all_predictions.append(predictions)
         i += 1
@@ -76,7 +77,6 @@ def main():
         pred = all_predictions[i]
         ID = IDs_test[i]
         zeros = [int(ID)] + [0] * 9
-        # zeros = [0.0] * 10
         write_csv_row(predictions_file, zeros + pred)
 
     print 'finished.'
@@ -89,22 +89,10 @@ def write_csv_row(f, row):
 
 def load_features(features_file):
     # determine number of columns in order to skip the first column
-    #features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
-    #IDs = features[:, 0]
-    #features = features[:, 1:]  # first column is ID
-    #return features, IDs
-    
-    f = open(features_file)
-    reader = csv.reader(f)
-    firstline = reader.next()   # first line are column labels
-    IDs = []
-    features = []
-    for line in reader:
-        IDs.append(int(line[0]))
-        features.append([int(a) for a in line[1:]])
-    return np.asarray(features), np.asarray(IDs)
-
-
+    features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
+    IDs = features[:, 0]
+    features = features[:, 1:]  # first column is ID
+    return features, IDs
 
 def load_targets(targets_file):
     targets = np.loadtxt(targets_file, delimiter = ',', skiprows = 1)
