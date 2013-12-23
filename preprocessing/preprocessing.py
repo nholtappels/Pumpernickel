@@ -7,10 +7,10 @@ Created on 15.12.2013
 from csvPreprocess import csvPreprocess as pp
 from create_filenames import create_names
 
-lower_threshold = 5
+lower_threshold = 1
 upper_threshold = 100
-numlines_train = 50
-numlines_test = 0  # 0 will be interpreted as all lines
+numlines_train = 10
+numlines_test = 10  # 0 will be interpreted as all lines
 only_trainingset = 0
 
 def preprocess(lower_threshold, numlines_train, numlines_test, only_trainingset):
@@ -20,10 +20,12 @@ def preprocess(lower_threshold, numlines_train, numlines_test, only_trainingset)
                                                only_trainingset, 1)
 
     # instantiate a model
-    prep = pp(lower_threshold, upper_threshold, numlines_train, numlines_test, only_trainingset)
+    prep = pp(lower_threshold, upper_threshold, numlines_train, numlines_test,
+              only_trainingset)
 
     prep.import_csv(csv_train, csv_test, storage_train, storage_test)
-    prep.create_new_csvs(features_train, targets_train, features_test, storage_train, storage_test)
+    prep.create_new_csvs(features_train, targets_train, features_test,
+                         storage_train, storage_test)
 
 if __name__ == '__main__':
     preprocess(lower_threshold, numlines_train, numlines_test, only_trainingset)

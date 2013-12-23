@@ -90,7 +90,7 @@ class csvPreprocess(object):
         lines = [line for line in source]
 
         if self.numlines_train != 0:
-            check_lines = lines[1:self.numlines_train]
+            check_lines = lines[1:self.numlines_train + 1]
         else:
             check_lines = lines[1:]
 
@@ -123,7 +123,7 @@ class csvPreprocess(object):
             print "importing test set..."
 
             if self.numlines_test != 0:
-                check_lines = lines[1:self.numlines_test]
+                check_lines = lines[1:self.numlines_test + 1]
             else:
                 check_lines = lines[1:]
 
