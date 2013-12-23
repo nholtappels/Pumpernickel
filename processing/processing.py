@@ -7,27 +7,31 @@ Created on 16.12.2013
 from NaiveBayes import NaiveBayes
 import numpy as np
 
-feature_filename_train = '../data/features_train_5_100_1000.csv'
-target_filename_train = '../data/targets_test_5_100_1000.csv'
-feature_filename_test = '../data/features_test_5_100_1000.csv/
-prediction_filename = '../data/predictions2.csv'
+features_file_train = '../data/features_train_5_100_5000.csv'
+targets_file_train = '../data/targets_train_5_100_5000.csv'
+features_file_test = '../data/features_test_5_100_0.csv'
+prediction_file = '../data/predictions2.csv'
 
-def main(feature_file, target_file, prediction_filename):
+def main():
 
     nb = NaiveBayes()
 
-    # TWITTER:
-    print 'load features and targets from files...'
-    features, all_targets, IDs = load_features_targets(feature_file, target_file)
+    # TRAINING DATA:
+    print 'load training features...'
+    features_train, IDs_train = load_features(features_file_train)
+    print 'load training targets...'
+    all_targets_train = load_targets(targets_file_train)
 
-    # test,test_indeces = load_testdata('../test.csv')
-    print 'split data in training set and test set...'
-    features, all_targets, IDs, testfeatures, all_testtargets, testIDs = splitdata(features,
-            all_targets, IDs)
+    # TEST DATA:
+#    print 'split data in training set and test set...'
+#    features_train, all_targets_train, IDs_train, features_test,
+#    all_targets_test, IDs_test = splitdata(features, all_targets, IDs)
+    print 'load test features...'
+    features_test, IDs_test = load_features(features_file_test)
 
-
+    # PREDICTION:
+    print 'start predicting...'
     prediction_file = open(prediction_filename, 'w')
-
     write_csv_row(prediction_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2', 'w3', \
                                     'w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
                                     'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k15'])
@@ -64,14 +68,6 @@ def main(feature_file, target_file, prediction_filename):
         # zeros = [0.0] * 10
         write_csv_row(prediction_file, zeros + pred)
 
-
-
-    # nb.train(data, targets)
-    # predictions = nb.predict(testdata)
-
-    # errors = evaluate(predictions, testtargets)
-    # print 'Housing Data: %d/%d predictions wrong.' %(errors, len(predictions))
-
     print 'finished.'
     return
 
@@ -80,18 +76,17 @@ def write_csv_row(f, row):
         f.write(str(a) + ',')
     f.write(str(row[-1]) + '\n')
 
-def load_features_targets(feature_file, target_file):
+def load_features(features_file):
     # determine number of columns in order to skip the first column
-    features = np.loadtxt(feature_file, delimiter = ',', skiprows = 1)
+    features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
     IDs = features[:, 0]
     features = features[:, 1:]  # first column is ID
+    return features, IDs
 
-    targets = np.loadtxt(target_file, delimiter = ',', skiprows = 1)
+def load_targets(targets_file):
+    targets = np.loadtxt(targets_file, delimiter = ',', skiprows = 1)
     targets = targets[:, 1:]  # first column is ID
-
-
-
-    return features, targets, IDs
+    return targets
 
 def evaluate(predictions, correct):
     errors = 0
@@ -113,4 +108,4 @@ def splitdata(data, targets, IDs):
     return data, targets, IDs, testdata, testtargets, testIDs
 
 if __name__ == '__main__':
-    main(feature_filename, target_filename, prediction_filename)
+    main()
