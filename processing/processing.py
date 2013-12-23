@@ -89,10 +89,21 @@ def write_csv_row(f, row):
 
 def load_features(features_file):
     # determine number of columns in order to skip the first column
-    features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
-    IDs = features[:, 0]
-    features = features[:, 1:]  # first column is ID
-    return features, IDs
+    #features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
+    #IDs = features[:, 0]
+    #features = features[:, 1:]  # first column is ID
+    #return features, IDs
+    
+    f = open(features_file)
+    reader = csv.reader(f)
+    firstline = reader.next()   # first line are column labels
+    IDs = []
+    features = []
+    for line in reader:
+        IDs.append(int(line[0]))
+        features.append([int(a) for a in line[1:]])
+    return np.asarray(features), np.asarray(IDs)
+
 
 def load_targets(targets_file):
     targets = np.loadtxt(targets_file, delimiter = ',', skiprows = 1)
