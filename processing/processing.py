@@ -29,7 +29,7 @@ def main():
 
     # TRAINING DATA:
     print 'load training features...'
-    features_train, IDs_train = load_features(features_file_train)
+    features_train = load_features(features_file_train)
     print 'load training targets...'
     all_targets_train = load_targets(targets_file_train)
 
