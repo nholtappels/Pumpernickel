@@ -6,6 +6,7 @@ Created on 16.12.2013
 
 from NaiveBayes import NaiveBayes
 from create_filenames import create_names
+from slice_testdata import slice_data
 import numpy as np
 
 lower_threshold = 1
@@ -14,7 +15,7 @@ numlines_train = 10  # 0 will be interpreted as all lines
 numlines_test = 10  # 0 will be interpreted as all lines
 
 features_file_train, targets_file_train, features_file_test, \
-predictions_file_test = create_names(lower_threshold, upper_threshold,
+predictions_test_raw = create_names(lower_threshold, upper_threshold,
                                 numlines_train, numlines_test, 0, 0)
 
 def main():
@@ -39,21 +40,15 @@ def main():
 #    features_train, all_targets_train, IDs_train, features_test,
 #    all_targets_test, IDs_test = splitdata(features, all_targets, IDs)
     print 'load test features...'
-    features_test, IDs_test = load_features(features_file_test)
-
-    # PREDICTION:
-    print 'start predicting...'
-    predictions_file = open(predictions_file_test, 'w')
-    write_csv_row(predictions_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2', 'w3', \
-                                    'w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
-                                    'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k15'])
+    #slice the test data file into several files and process them separately to
+    # avoid memory errors:
+    test_filename_raw = features_file_test.strip('.csv')
+    number_files = slice_data(features_file_test, test_filename_raw, 5000)
+    print 'splitted test data into %d files' % number_files
 
 
     # run Naive Bayes for each target separately
     # (not 1 vs all because different targets are independent)
-
-#     print 'test on:'
-#     print testfeatures
     all_predictions = []
     all_targets = all_targets_train.T
     i = 0
@@ -63,12 +58,28 @@ def main():
         print 'target %d: training and predicting' % (i)
         # Naive Bayes:
         nb.train(features_train, targets)
-        predictions = nb.predict(features_test)
-#         errors = evaluate(predictions, testtargets)
-#         print 'target %d: %d/%d predictions wrong.' %(targ_index,errors, len(predictions))
-#         print '--> predictions: ' + str(predictions) + '\n'
+
+
+        for i in xrange(number_files):
+            print 'processing testfile %d/%d' % (i, number_files-1)
+            features_file_test = test_filename_raw + str(i) + '.csv'
+            features_test, IDs_test = load_features(features_file_test)
+
+            # PREDICTION:
+            print 'start predicting...'
+            predictions_file_name = predictions_test_raw + str(i) + '.csv'
+            predictions_file = open(predictions_file_name, 'w')
+            write_csv_row(predictions_file, ['id', 's1', 's2', 's3', 's4', 's5', \
+                                             'w1', 'w2', 'w3', 'w4', 'k1', 'k2', \
+                                             'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
+                                             'k9', 'k10', 'k11', 'k12', 'k13', \
+                                             'k14', 'k15'])
+
+
+            predictions = nb.predict(features_test)
+            i += 1
         all_predictions.append(predictions)
-        i += 1
+        
 
     print 'write predictions to file...'
     # write predictions to file
