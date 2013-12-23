@@ -6,91 +6,92 @@ Created on 16.12.2013
 
 from NaiveBayes import NaiveBayes
 from create_filenames import create_names
-from slice_testdata import slice_data
 import numpy as np
+from slice_merge import slice_csv, merge_csvs
 
 lower_threshold = 1
 upper_threshold = 100
 numlines_train = 10  # 0 will be interpreted as all lines
-numlines_test = 10  # 0 will be interpreted as all lines
+numlines_test = 10000  # 0 will be interpreted as all lines
+slice_size = 200
 
 features_file_train, targets_file_train, features_file_test, \
-predictions_test_raw = create_names(lower_threshold, upper_threshold,
-                                numlines_train, numlines_test, 0, 0)
+predictions_file_test = create_names(lower_threshold, upper_threshold,
+                                     numlines_train, numlines_test, 0, 0)
 
 def main():
 
     try:
-        load_features(features_file_train)
+        load_features(features_file_train, 1)
     except IOError:
         print "The corresponding files have not been created yet."
         print "Please run preprocessing witht the same parameters and try again."
         raise SystemExit(0)
 
+    slice_names = slice_csv(features_file_test, slice_size)
+
     nb = NaiveBayes()
 
     # TRAINING DATA:
     print 'load training features...'
-    features_train = load_features(features_file_train)
+    features_train, dont_use_me = load_features(features_file_train, 1)
     print 'load training targets...'
     all_targets_train = load_targets(targets_file_train)
 
-    # TEST DATA:
-#    print 'split data in training set and test set...'
-#    features_train, all_targets_train, IDs_train, features_test,
-#    all_targets_test, IDs_test = splitdata(features, all_targets, IDs)
-    print 'load test features...'
-    #slice the test data file into several files and process them separately to
-    # avoid memory errors:
-    test_filename_raw = features_file_test.strip('.csv')
-    number_files = slice_data(features_file_test, test_filename_raw, 5000)
-    print 'splitted test data into %d files' % number_files
+    s = 1
+
+    pred_names = []
+    first = 1
+
+    for slice_name in slice_names:
+        print '>>> starting with slice', s
+        print 'load test features...'
+        # TEST DATA:
+        features_test, IDs_test = load_features(slice_name, 0)
+
+        # PREDICTION:
+        print 'start predicting...'
+        predictions_file_test = slice_name.replace('features', 'predictions')
+        pred_names.append(predictions_file_test)
+        predictions_file = open(predictions_file_test, 'w')
+        if first:
+            write_csv_row(predictions_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2', 'w3',
+                                             'w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6', 'k7', 'k8',
+                                             'k9', 'k10', 'k11', 'k12', 'k13', 'k14', 'k15'])
+            first = 0
 
 
-    # run Naive Bayes for each target separately
-    # (not 1 vs all because different targets are independent)
-    all_predictions = []
-    all_targets = all_targets_train.T
-    i = 0
-    for targets in all_targets:
-#         targets = all_targets[3]
-#         print 'targets: ' + str(targets)
-        print 'target %d: training and predicting' % (i)
-        # Naive Bayes:
-        nb.train(features_train, targets)
+        # run Naive Bayes for each target separately
+        # (not 1 vs all because different targets are independent)
 
-
-        for i in xrange(number_files):
-            print 'processing testfile %d/%d' % (i, number_files-1)
-            features_file_test = test_filename_raw + str(i) + '.csv'
-            features_test, IDs_test = load_features(features_file_test)
-
-            # PREDICTION:
-            print 'start predicting...'
-            predictions_file_name = predictions_test_raw + str(i) + '.csv'
-            predictions_file = open(predictions_file_name, 'w')
-            write_csv_row(predictions_file, ['id', 's1', 's2', 's3', 's4', 's5', \
-                                             'w1', 'w2', 'w3', 'w4', 'k1', 'k2', \
-                                             'k3', 'k4', 'k5', 'k6', 'k7', 'k8', \
-                                             'k9', 'k10', 'k11', 'k12', 'k13', \
-                                             'k14', 'k15'])
-
-
+        all_predictions = []
+        all_targets = all_targets_train.T
+        i = 0
+        for targets in all_targets:
+            print 'target %d: training and predicting' % (i)
+            # Naive Bayes:
+            nb.train(features_train, targets)
             predictions = nb.predict(features_test)
+            all_predictions.append(predictions)
             i += 1
-        all_predictions.append(predictions)
-        
 
-    print 'write predictions to file...'
-    # write predictions to file
-    all_predictions = (np.array(all_predictions).T).tolist()
-    for i in range(len(all_predictions)):
-        pred = all_predictions[i]
-        ID = IDs_test[i]
-        zeros = [int(ID)] + [0] * 9
-        write_csv_row(predictions_file, zeros + pred)
+        print 'write predictions to file...'
+        # write predictions to file
+        all_predictions = (np.array(all_predictions).T).tolist()
+        print all_predictions
+        for i in range(len(all_predictions)):
+            print i
+            pred = all_predictions[i]
+            ID = IDs_test[i]
+            zeros = [int(ID)] + [0] * 9
+            write_csv_row(predictions_file, zeros + pred)
 
-    print 'finished.'
+        print '>>> finished with slice', s
+        s += 1
+        predictions_file.close()
+        print
+    print '>>> >>> finished with all slices <<<'
+    merge_csvs(pred_names)
     return
 
 def write_csv_row(f, row):
@@ -98,9 +99,12 @@ def write_csv_row(f, row):
         f.write(str(a) + ',')
     f.write(str(row[-1]) + '\n')
 
-def load_features(features_file):
+def load_features(features_file, skip):
     # determine number of columns in order to skip the first column
-    features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
+    if skip == 1:
+        features = np.loadtxt(features_file, delimiter = ',', skiprows = 1)
+    if skip == 0:
+        features = np.loadtxt(features_file, delimiter = ',')
     IDs = features[:, 0]
     features = features[:, 1:]  # first column is ID
     return features, IDs
