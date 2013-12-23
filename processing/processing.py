@@ -30,7 +30,6 @@ def main():
 
     slice_names = slice_csv(features_file_test, slice_size)
 
-    nb = NaiveBayes()
 
     # TRAINING DATA:
     print 'load training features...'
@@ -44,8 +43,10 @@ def main():
     first = 1
 
     print 'TRAINING'
+    nb = [None] * 15
     all_targets = all_targets_train.T
     for i in xrange(15):
+        nb[i] = NaiveBayes()
         targets = all_targets[i]
         print 'target %d: training' % (i)
         nb[i].train(features_train, targets)
