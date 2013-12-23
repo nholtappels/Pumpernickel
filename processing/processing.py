@@ -9,11 +9,11 @@ from create_filenames import create_names
 import numpy as np
 from slice_merge import slice_csv, merge_csvs
 
-lower_threshold = 5
+lower_threshold = 1
 upper_threshold = 100
-numlines_train = 1000  # 0 will be interpreted as all lines
-numlines_test = 1000  # 0 will be interpreted as all lines
-slice_size = 200
+numlines_train = 100  # 0 will be interpreted as all lines
+numlines_test = 100  # 0 will be interpreted as all lines
+slice_size = 2
 
 features_file_train, targets_file_train, features_file_test, \
 predictions_file_test = create_names(lower_threshold, upper_threshold,
@@ -23,6 +23,7 @@ def main():
 
     try:
         load_features(features_file_test, 1)
+        load_features(features_file_train, 1)
     except IOError:
         print "The corresponding files have not been created yet."
         print "Please run preprocessing witht the same parameters and try again."
