@@ -11,6 +11,7 @@ def create_names(lower_threshold, upper_threshold, numlines_train, numlines_test
     csv_test = ''
     storage_test = ''
     features_test = ''
+    probabilities_test = ''
 
     # create dynamic filenames based on the values above
     csv_train = '../data/train.csv'
@@ -33,8 +34,13 @@ def create_names(lower_threshold, upper_threshold, numlines_train, numlines_test
     else:
         predictions_test = ('../data/_predictions_test_' + str(lower_threshold) + '_' +
                     str(upper_threshold) + '_' + str(numlines_train) + '.csv')
+        probabilities_test = ('../data/_probabilities_test_' + str(lower_threshold) + '_' +
+                    str(upper_threshold) + '_' + str(numlines_test) + '.csv')
 
     if ispre:
         return csv_train, storage_train, features_train, targets_train, csv_test, storage_test, features_test
     else:
-        return features_train, targets_train, features_test, predictions_test
+        if only_trainingset:
+            return features_train, targets_train, features_test, probabilities_test, predictions_test
+        else:
+            return features_train, targets_train, features_test, predictions_test

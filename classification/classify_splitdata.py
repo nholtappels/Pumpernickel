@@ -17,7 +17,7 @@ split_at = 0.7
 
 
 features_file_train, targets_file_train, features_file_test, \
-predictions_file_train = create_names(lower_threshold, upper_threshold,
+probabilities_filename, predictions_filename = create_names(lower_threshold, upper_threshold,
                                      numlines_train, 0, 1, 0)
 
 def main():
@@ -42,7 +42,7 @@ def main():
     # run Naive Bayes for each target separately
     # (not 1 vs all because different targets are independent)
     all_targets_train = all_targets_train.T
-    all_predictions = []
+    all_probabilities = []
     for i in xrange(15):
         print 'TARGET %d:' % (i)
         print 'train...'
@@ -53,24 +53,62 @@ def main():
 
         # PREDICTION:
         print 'predict...'        
-        predictions = nb.predict(features_test)
-        all_predictions.append(predictions)
+        probabilities = nb.predict(features_test)
+        all_probabilities.append(probabilities)
 
 
     print 'write predictions to file...'
-    predictions_file = open(predictions_file_train, 'w')
+    predictions_file = open(predictions_filename, 'w')
     write_csv_row(predictions_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2',\
                                      'w3','w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6',\
                                      'k7', 'k8','k9', 'k10', 'k11', 'k12', 'k13',\
                                      'k14', 'k15'])
+    prob_file = open(probabilities_filename, 'w')
+    write_csv_row(prob_file, ['id', 's1', 's2', 's3', 's4', 's5', 'w1', 'w2',\
+                                     'w3','w4', 'k1', 'k2', 'k3', 'k4', 'k5', 'k6',\
+                                     'k7', 'k8','k9', 'k10', 'k11', 'k12', 'k13',\
+                                     'k14', 'k15'])
 
-    all_predictions = (np.array(all_predictions).T).tolist()
-    for i in range(len(all_predictions)):
-        pred = all_predictions[i]
+    all_prob = (np.array(all_probabilities).T).tolist()
+    all_predictions = []
+    for i in range(len(all_prob)):
+        prob = all_prob[i]
         ID = IDs_test[i]
         zeros = [int(ID)] + [0] * 9
+        write_csv_row(prob_file, zeros + prob)
+        #make predictions from probabilities (either 0 or 1):
+        pred = [round(p) for p in prob]
         write_csv_row(predictions_file, zeros + pred)
+        all_predictions.append(pred)
+    prob_file.close()
     predictions_file.close()
+    
+    print ''
+    print 'EVALUATE PREDICTIONS'
+    row_errors = 0
+    total_errors = 0
+    number_tweets = len(targets_test)
+    predictions_total = 15 * number_tweets
+    for i in xrange(number_tweets):
+        target_row = targets_test[i]
+        targets_rounded = [round(p) for p in target_row]
+        predictions = all_predictions[i]
+        row_wrong = False
+        for j in xrange(len(targets_rounded)):
+            if targets_rounded[j] != predictions[j]:
+                row_wrong = True
+                total_errors += 1
+        if row_wrong:
+            row_errors += 1
+    row_accuracy = (float(number_tweets - row_errors)/number_tweets) * 100
+    total_accuracy = (float(predictions_total - total_errors))\
+            / predictions_total* 100
+    print '%d/%d tweets contain an error in the predictions \
+            --> accuracy = %d percent' % (row_errors, number_tweets, row_accuracy)
+    print '%d/%d predictions in total wrong --> accuracy %d percent.' \
+                      % (total_errors, predictions_total, total_accuracy)
+    
+
     print 'finished.'
 
     return
