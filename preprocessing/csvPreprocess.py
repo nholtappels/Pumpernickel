@@ -1,7 +1,7 @@
 '''
 Created on 08.12.2013
 
-@author: Nick
+@author: Nick & David
 '''
 
 from nltk import corpus
@@ -17,7 +17,7 @@ class csvPreprocess(object):
     parameters:
     lower_threshold: words occuring less frequent than this are removed (absolute)
     upper_threshold: words occuring more frequent than this are removed (threshold is percentage of highest frequency, 100=nothing removed)
-    when called with is_train == True this class only preprocesses the training set and splits it up in test set and training set. However, when called with is_train == False it trains on the training set and uses the same bag of words to predict on the test set given in a separate file. The second option is needed for the actual submission to Kaggle.
+    when called with is_train == True this class only preprocesses the training set as only this is used and split up into training and test set. However, when called with is_train == False this class preprocesses both the training data and test data from separate files. This is how it is supposed to be for the Kaggle competition. 
     '''
     def __init__(self, lower_threshold = 1, upper_threshold = 100, numlines_train = 0, numlines_test = 0, is_train = True):
         print "starting to preprocess..."
@@ -25,35 +25,33 @@ class csvPreprocess(object):
         self.features_dict_test = {}
         self.targets_dict_train = {}
 
-        # FEATURES: [[15,0,0,0,0,1,0,1,1,3,1,0,0,2,1,0,1,1,0,0,0,0,0,1],
-        # [...],...]; order: [id (not a feature), freq1, freq2, freq3,
-        # ..., has_hashtag, has_mention, is_retweet, has_link, oklahoma,
-        # new york, california...]
+        ''' FEATURES: for example: [[15,0,0,0,0,1,0,1,1,3,1,0,0,2,1,0,1,1,0,0,0,0,0,1], [...],...]; 
+        order: [id (not a feature), freq1, freq2, freq3, ..., has_hashtag, has_mention, is_retweet, has_link, oklahoma,
+         new york, california...]'''
         self.features_list_train = []
         self.features_list_test = []
 
-        # TARGETS: [[0,1,0,0.194,0,0.605,0.2,0],. probabilities for each
-        # kind of weather, not summing to 1. first value is ID, followed by
-        # target-values
+        ''' TARGETS: [[0,1,0,0.194,0,0.605,0.2,0],. probabilities for each
+        kind of weather, not summing to 1. first value is ID, followed by target values'''
         self.targets_list_train = []
 
         self.all_words = []
         self.total_word_count = 0
-        # The minimum number of occurrences of a word to be kept in all_words
-        self.lower_threshold = lower_threshold
-        self.upper_threshold = upper_threshold
+        # The minimum/maximum number of occurrences of a word to be kept in all_words:
+        self.lower_threshold = lower_threshold  #absolute
+        self.upper_threshold = upper_threshold  #relative
         self.upper_threshold_absolute = 0
-        # If is_train == False, no target_dict will be created
+        # If is_train is False, no target_dict will be created
         self.is_train = is_train
-        # Number of lines of the initial CSV that will be imported
+        # Number of lines of the initial CSVs that will be imported:
         self.numlines_train = numlines_train
         self.numlines_test = numlines_test
         self.delchars = (''.join(c for c in map(chr, range(256)) if not
                                  c.isalpha()))
         self.stopwords = corpus.stopwords.words('english')
 
-        self.total_frequency = {}
-        # for later we need a list of states
+        self.total_frequency = {}   #frequency of each unique word over all tweets
+        # for later we need a list of states:
         self.states = ['alabama', 'alaska', 'arizona', 'arkansas',
                        'california', 'colorado', 'connecticut', 'delaware',
                        'florida', 'georgia', 'hawaii', 'idaho', 'illinois',
@@ -97,7 +95,7 @@ class csvPreprocess(object):
         i = 0
         for line in check_lines:
             # inform about progress
-            if i % 500 == 0:
+            if i % 1000 == 0:
                 print '%d tweets processed' % i
             i += 1
 
@@ -149,12 +147,20 @@ class csvPreprocess(object):
 
     def create_new_csvs(self, features_train_csv, targets_train_csv,
                         features_test_csv, storage_train, storage_test):
+        ''' converts the feature- and target-dictionaries created in import_csvs into
+        lists containing the features and targets so they can be written to csv files.
+        creates the bag of words, counts frequencies for these words in all tweets,
+        creates all features, writes features and targets to files.
+        '''
         # load data from file into features_list and targets_list
         self.__load_data(storage_train, storage_test)
         self.total_frequency = self.__count_frequencies(self.features_dict_train)
+        
         # optional: plotting of word frequencies
 #         self.__plot_word_frequencies()
+       
         self.__remove_lowfrequent_highfrequent_words()
+        
         self.features_list_train = self.__create_features_list(self.features_dict_train)
         self.targets_list_train = self.__create_targets_list(self.targets_dict_train)
 
@@ -165,6 +171,10 @@ class csvPreprocess(object):
         self.__save_csvs(features_train_csv, targets_train_csv, features_test_csv)
 
     def __plot_word_frequencies(self):
+        ''' show a plot of the word frequency distribution. vertical red lines
+            show the upper and lower threshold. words above and below will be
+            cut out.
+        '''
         count_freq_dict = {}
         for freq in self.total_frequency.itervalues():
             count_freq_dict.setdefault(freq, 0)
@@ -177,7 +187,7 @@ class csvPreprocess(object):
             count_list.append(count)
 
         plt.bar(freq_list, count_list)
-        # draw the lower and upper threshold:
+        # draw the lower and upper threshold:            
         plt.axvline(x = self.lower_threshold, color = 'r')
         plt.axvline(x = self.upper_threshold_absolute, color = 'r')
 
@@ -236,6 +246,8 @@ class csvPreprocess(object):
         return targets
 
     def __save_data(self, storage_train, storage_test):
+        '''save data to storage file. just an intermediate storage.
+        '''
         print "saving data to storage file..."
         data = [self.features_dict_train, self.targets_dict_train]
         f = open(storage_train, 'w')
@@ -249,6 +261,8 @@ class csvPreprocess(object):
             f.close()
 
     def __load_data(self, storage_train, storage_test):
+        '''load data from storage file.
+        '''
         print "loading data from storage file..."
         source = open(storage_train , 'r')
         data = cp.load(source)
@@ -261,6 +275,8 @@ class csvPreprocess(object):
         source.close()
 
     def __write_csv_row(self, f, row):
+        ''' write a list into a csv file, comma-separating the list-items
+        '''
         for a in row[:-1]:
             f.write(str(a) + ',')
         f.write(str(row[-1]) + '\n')
@@ -305,6 +321,10 @@ class csvPreprocess(object):
                 % (self.lower_threshold, self.upper_threshold_absolute, self.total_word_count, num_all_words)
 
     def __create_features_list(self, features_dict):
+        ''' converts the feature dictionary into a list of features. 
+            counts word frequencies, binarizes the location-feature etc.
+            the result is in the same format as it is supposed to be written to the csv.
+        '''
         print "creating features list..."
         features_list = []
         for tweet_id, features_old in features_dict.iteritems():
@@ -344,7 +364,7 @@ class csvPreprocess(object):
             features_new.append(has_link)
 
             # STATES:
-            # give naive bayes a list where 1 means it's that state:
+            # give naive bayes a list where 1 means it's in that state:
             # [0,0,0,0,1,0,0,0]
             # better than just a number representing a state because then
             # gaussian naive bayes would think that two neighboring states
@@ -360,6 +380,8 @@ class csvPreprocess(object):
         return features_list
 
     def __create_targets_list(self, targets_dict):
+        ''' convert the target dictionary into a list of targets
+        '''
         print "Creating targets list..."
         targets_list = []
         for t_id, t in targets_dict.iteritems():
@@ -369,6 +391,8 @@ class csvPreprocess(object):
         return targets_list
 
     def __save_csvs(self, features_train_csv, targets_train_csv, features_test_csv):
+        ''' save the features and targets to csv files.
+        '''
         print "saving training features in csv"
         # first row: label of columns
         feature_headers = ['ID']
